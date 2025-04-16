@@ -3,25 +3,34 @@
     --bb-select-append-width: #{$bb-select-append-width};
     --bb-select-append-color: #{$bb-select-append-color};
     position: relative;
-
+    overflow: visible !important; // Force parent to never scroll
+    
     .form-control {
         background-image: none;
         padding-right: var(--bb-ac-padding-right);
     }
-
+    
     .dropdown-menu {
         width: 100%;
+        max-height: 300px; // Set appropriate height
+        overflow-y: auto; // Enable vertical scrolling
+        overflow-x: hidden; // Prevent horizontal scrolling
+        position: absolute !important; // Force absolute positioning
     }
-
+    
+    // This is the key fix for the nested element issue
+    .dropdown-menu-body {
+        overflow: visible !important; // Force to never scroll
+    }
+    
     .ac-loading {
         display: none;
     }
-
+    
     &.is-loading {
         .ac-loading {
             display: flex;
         }
-
         .form-select-append:not(.ac-loading) {
             display: none;
         }
