@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <Version>9.5.8</Version>
+
+    <!-- uncomment to force it to use .net 8.0.6, like the server -->
+    <RuntimeFrameworkVersion>8.0.6</RuntimeFrameworkVersion>
+    <RollForward>disable</RollForward>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +35,10 @@
     <Using Include="Microsoft.Extensions.Options" />
     <Using Include="Microsoft.JSInterop" />
     <Using Include="System.ComponentModel.DataAnnotations" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="AspNetCore.SassCompiler" Version="1.79.5" />
   </ItemGroup>
 
 </Project>

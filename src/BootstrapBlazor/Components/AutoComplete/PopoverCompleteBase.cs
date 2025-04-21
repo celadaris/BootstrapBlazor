@@ -159,12 +159,6 @@ public abstract class PopoverCompleteBase<TValue> : BootstrapInputBase<TValue>, 
     }
 
     /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    /// <returns></returns>
-    protected override Task InvokeInitAsync() => InvokeVoidAsync("init", Id, Interop);
-
-    /// <summary>
     /// 触发 OnBlur 回调方法 由 Javascript 触发
     /// </summary>
     [JSInvokable]
@@ -175,4 +169,26 @@ public abstract class PopoverCompleteBase<TValue> : BootstrapInputBase<TValue>, 
             await OnBlurAsync(Value);
         }
     }
+
+    /// <summary>
+    /// TriggerFilter 方法
+    /// </summary>
+    /// <param name="val"></param>
+    /// <returns></returns>
+    [JSInvokable]
+    public virtual Task TriggerFilter(string val) => Task.CompletedTask;
+
+    /// <summary>
+    /// TriggerChange 方法
+    /// </summary>
+    /// <param name="val"></param>
+    /// <returns></returns>
+    [JSInvokable]
+    public virtual Task TriggerChange(string val) => Task.CompletedTask;
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <returns></returns>
+    protected override Task InvokeInitAsync() => InvokeVoidAsync("init", Id, Interop);
 }
