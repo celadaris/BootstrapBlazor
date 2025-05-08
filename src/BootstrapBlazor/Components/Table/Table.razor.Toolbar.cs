@@ -16,6 +16,12 @@ public partial class Table<TItem>
     public bool ShowToolbar { get; set; }
 
     /// <summary>
+    /// Gets or sets the template of table toolbar. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ToolbarTemplate { get; set; }
+
+    /// <summary>
     /// 获得/设置 首次加载是否显示加载骨架屏 默认 false 不显示 使用 <see cref="ShowLoadingInFirstRender" /> 参数值
     /// </summary>
     [Parameter]
@@ -538,8 +544,8 @@ public partial class Table<TItem>
     {
         if (SelectedRows.Count == 1)
         {
-            // 检查是否选中了不可编辑行（行内无编辑按钮）
-            if (ShowExtendEditButtonCallback != null && !ShowExtendEditButtonCallback(SelectedRows[0]))
+            // 检查是否选中了不可编辑行（行内无编辑按钮），同时检查按钮禁用状态（禁用时不可编辑）
+            if (ProhibitEdit())
             {
                 // 提示不可编辑
                 await ShowToastAsync(EditButtonToastTitle, EditButtonToastReadonlyContent);
@@ -986,7 +992,7 @@ public partial class Table<TItem>
         {
             await ShowDeleteToastAsync(DeleteButtonToastTitle, DeleteButtonToastContent);
         }
-        else if (ShowExtendDeleteButtonCallback != null && SelectedRows.Any(i => !ShowExtendDeleteButtonCallback(i)))
+        else if (ProhibitDelete())
         {
             await ShowDeleteToastAsync(DeleteButtonToastTitle, DeleteButtonToastCanNotDeleteContent);
         }
@@ -996,6 +1002,16 @@ public partial class Table<TItem>
         }
         return ret;
     }
+
+    private bool ProhibitEdit() => (ShowExtendEditButtonCallback != null && !ShowExtendEditButtonCallback(SelectedRows[0]))
+                || !ShowExtendEditButton
+                || (DisableExtendEditButtonCallback != null && DisableExtendEditButtonCallback(SelectedRows[0]))
+                || DisableExtendEditButton;
+
+    private bool ProhibitDelete() => (ShowExtendDeleteButtonCallback != null && SelectedRows.Any(i => !ShowExtendDeleteButtonCallback(i)))
+            || !ShowExtendDeleteButton
+            || (DisableExtendDeleteButtonCallback != null && SelectedRows.Any(x => DisableExtendDeleteButtonCallback(x)))
+            || DisableExtendDeleteButton;
 
     /// <summary>
     /// 删除数据方法

@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 // Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using Microsoft.AspNetCore.Components.Web;
-
 namespace BootstrapBlazor.Components;
 
 /// <summary>
@@ -42,7 +40,7 @@ public partial class Button : ButtonBase
     }
 
     /// <summary>
-    /// OnClickButton 方法 
+    /// OnClickButton 方法
     /// </summary>
     protected virtual async Task OnClickButton()
     {
@@ -52,14 +50,7 @@ public partial class Button : ButtonBase
             IsDisabled = true;
         }
 
-        if (IsAsync)
-        {
-            await Task.Run(() => InvokeAsync(HandlerClick));
-        }
-        else
-        {
-            await HandlerClick();
-        }
+        await HandlerClick();
 
         // 恢复按钮
         if (IsAsync && ButtonType == ButtonType.Button)

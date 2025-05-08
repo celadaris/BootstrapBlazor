@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace UnitTest.Components;
 
@@ -560,9 +561,12 @@ public class TableTest : BootstrapBlazorTestBase
                     builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Name", typeof(string)));
                     builder.CloseComponent();
                 });
+                pb.Add(a => a.ToolbarTemplate, builder => builder.AddContent(0, "table-toolbar-template-content"));
             });
         });
         cut.Contains("float-end table-toolbar-button");
+        cut.Contains("float-start table-toolbar-template");
+        cut.Contains("table-toolbar-template-content");
     }
 
     [Fact]
@@ -2360,6 +2364,7 @@ public class TableTest : BootstrapBlazorTestBase
     {
         var clicked = false;
         var clickCallback = false;
+        var confirmCallback = false;
         var localizer = Context.Services.GetRequiredService<IStringLocalizer<Foo>>();
         var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
         {
@@ -2390,15 +2395,21 @@ public class TableTest : BootstrapBlazorTestBase
                         clickCallback = true;
                         return Task.CompletedTask;
                     }));
+                    builder.AddAttribute(4, nameof(TableToolbarPopConfirmButton<Foo>.OnConfirm), new Func<Task>(() =>
+                    {
+                        confirmCallback = true;
+                        return Task.CompletedTask;
+                    }));
                     builder.CloseComponent();
                 });
             });
         });
 
         var button = cut.FindComponent<PopConfirmButton>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
         Assert.True(clickCallback);
         Assert.True(clicked);
+        Assert.True(confirmCallback);
     }
 
     [Fact]
@@ -5370,7 +5381,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(input.Instance.OnToggleClick);
 
         var button = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
         Assert.Single(items);
     }
 
@@ -5420,7 +5431,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(input.Instance.OnToggleClick);
 
         var button = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
 
         var row = cut.FindAll("tbody tr");
         Assert.Single(row);
@@ -6199,7 +6210,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => table.Instance.AddAsync());
 
         var delete = cut.FindComponent<TableToolbarPopConfirmButton<DynamicObject>>();
-        await cut.InvokeAsync(() => delete.Instance.OnConfirm());
+        await cut.InvokeAsync(() => delete.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -6953,13 +6964,13 @@ public class TableTest : BootstrapBlazorTestBase
         // 选一个
         var input = cut.FindComponents<Checkbox<Foo>>()[1];
         cut.InvokeAsync(input.Instance.OnToggleClick);
-        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm());
+        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm!.Invoke());
 
         table.SetParametersAndRender(pb =>
         {
             pb.Add(a => a.PageItemsSource, [1, 2, 4, 8]);
         });
-        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm());
+        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -7084,7 +7095,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => table.Instance.AddAsync());
 
         var delete = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => delete.Instance.OnConfirm());
+        await cut.InvokeAsync(() => delete.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -8623,6 +8634,84 @@ public class TableTest : BootstrapBlazorTestBase
             });
             return Task.CompletedTask;
         });
+    }
+
+    [Fact]
+    public void Modify_Ok()
+    {
+        var cut = Context.RenderComponent<Table<Foo>>(pb =>
+        {
+            pb.Add(a => a.TableColumns, foo => builder =>
+            {
+                builder.OpenComponent<TableColumn<Foo, string>>(0);
+                builder.AddAttribute(1, "Field", "Name");
+                builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Name", typeof(string)));
+                builder.CloseComponent();
+            });
+            pb.Add(a => a.ShowExtendEditButton, false);
+            pb.Add(a => a.ShowExtendDeleteButton, false);
+        });
+        Assert.True(ProhibitEdit(cut.Instance));
+        Assert.True(ProhibitDelete(cut.Instance));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowExtendEditButton, true);
+            pb.Add(a => a.ShowExtendDeleteButton, true);
+            pb.Add(a => a.DisableExtendEditButton, true);
+            pb.Add(a => a.DisableExtendDeleteButton, true);
+        });
+        Assert.True(ProhibitEdit(cut.Instance));
+        Assert.True(ProhibitDelete(cut.Instance));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowExtendEditButton, true);
+            pb.Add(a => a.ShowExtendDeleteButton, true);
+            pb.Add(a => a.DisableExtendEditButton, false);
+            pb.Add(a => a.DisableExtendDeleteButton, false);
+            pb.Add(a => a.SelectedRows, [new Foo()]);
+            pb.Add(a => a.DisableExtendEditButtonCallback, rows =>
+            {
+                return true;
+            });
+            pb.Add(a => a.DisableExtendDeleteButtonCallback, rows =>
+            {
+                return true;
+            });
+        });
+        Assert.True(ProhibitEdit(cut.Instance));
+        Assert.True(ProhibitDelete(cut.Instance));
+    }
+
+    static bool ProhibitEdit(Table<Foo> @this)
+    {
+        var ret = false;
+        var methodInfo = @this.GetType().GetMethod("ProhibitEdit", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (methodInfo != null)
+        {
+            var result = methodInfo.Invoke(@this, null);
+            if (result is bool d)
+            {
+                ret = d;
+            }
+        }
+        return ret;
+    }
+
+    static bool ProhibitDelete(Table<Foo> @this)
+    {
+        var ret = false;
+        var methodInfo = @this.GetType().GetMethod("ProhibitDelete", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (methodInfo != null)
+        {
+            var result = methodInfo.Invoke(@this, null);
+            if (result is bool d)
+            {
+                ret = d;
+            }
+        }
+        return ret;
     }
 
     class MockFoo(string name)

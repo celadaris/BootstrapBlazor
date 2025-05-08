@@ -398,6 +398,7 @@ public class DialogTest : BootstrapBlazorTestBase
         #region 弹窗中的弹窗测试
         await cut.InvokeAsync(() => dialog.Show(new DialogOption()
         {
+            IsHidePreviousDialog = true,
             // 弹窗中按钮
             BodyTemplate = BootstrapDynamicComponent.CreateComponent<Button>(new Dictionary<string, object?>()
             {
@@ -414,10 +415,12 @@ public class DialogTest : BootstrapBlazorTestBase
                 }
             }).Render()
         }));
+        Assert.DoesNotContain("modal-multiple", cut.Markup);
 
         // 弹出第二个弹窗
         var buttonInDialog = cut.Find(".btn-primary");
         buttonInDialog.Click();
+        Assert.Contains("class=\"modal fade modal-multiple show\"", cut.Markup);
         Assert.Equal(2, cut.FindComponents<ModalDialog>().Count);
 
         // 关闭第二个弹窗
@@ -568,6 +571,11 @@ public class DialogTest : BootstrapBlazorTestBase
         {
             parameter.Add("Class", "test");
         }));
+        await cut.InvokeAsync(() => modal.Instance.CloseCallback());
+        #endregion
+
+        #region Show Extensions Method
+        await cut.InvokeAsync(() => dialog.Show<MockValidateFormDialog>("Test Title"));
         await cut.InvokeAsync(() => modal.Instance.CloseCallback());
         #endregion
     }

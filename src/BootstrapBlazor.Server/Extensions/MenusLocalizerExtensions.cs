@@ -410,6 +410,12 @@ internal static class MenusLocalizerExtensions
                 },
                 new()
                 {
+                    IsNew = true,
+                    Text = Localizer["OtpInput"],
+                    Url = "otp-input"
+                },
+                new()
+                {
                     Text = Localizer["OnScreenKeyboard"],
                     Url = "onscreen-keyboard"
                 },
@@ -1533,8 +1539,26 @@ internal static class MenusLocalizerExtensions
                 },
                 new()
                 {
+                    IsNew = true,
+                    Text = Localizer["TotpService"],
+                    Url = "otp-service"
+                },
+                new()
+                {
                     Text = Localizer["Title"],
                     Url = "title"
+                },
+                new()
+                {
+                    IsNew = true,
+                    Text = Localizer["AudioDevice"],
+                    Url = "audio-device"
+                },
+                new()
+                {
+                    IsNew = true,
+                    Text = Localizer["VideoDevice"],
+                    Url = "video-device"
                 },
                 new()
                 {
