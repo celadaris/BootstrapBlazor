@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <Version>9.7.1-beta01</Version>
+
+    <!-- uncomment to force it to use .net 8.0.6, like the server -->
+    <RuntimeFrameworkVersion>8.0.6</RuntimeFrameworkVersion>
+    <RollForward>disable</RollForward>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
